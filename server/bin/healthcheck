@@ -1,0 +1,2 @@
+#!/bin/bash
+mcstatus localhost ping 2>/dev/null || { echo "Could not reach the Minecraft server"; exit 1; }

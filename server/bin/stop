@@ -1,0 +1,79 @@
+#!/bin/bash
+
+healthcheck >/dev/null || exit 1
+
+function cleanup() {
+    kill $(jobs -p)
+    console "stopsound @a block skcraft:localforecast"
+    console "say [RESTART CANCELLED]"
+    exit 1
+}
+
+trap cleanup EXIT
+
+Floor () {
+    DIVIDEND=${1}
+    DIVISOR=${2}
+    RESULT=$(( ( ${DIVIDEND} - ( ${DIVIDEND} % ${DIVISOR}) )/${DIVISOR} ))
+    echo ${RESULT}
+}
+
+Timecount(){
+    s=${1}
+    HOUR=$( Floor ${s} 60/60 )
+    s=$((${s}-(60*60*${HOUR})))
+    MIN=$( Floor ${s} 60 )
+    SEC=$((${s}-60*${MIN}))
+    if [[ ${HOUR} -gt 0 ]]; then PRINT="${PRINT}${HOUR}h "; fi
+    if [[ ${MIN} -gt 0 ]]; then PRINT="${PRINT}${MIN}m "; fi
+    if [[ ${SEC} -gt 0 ]]; then PRINT="${PRINT}${SEC}s "; fi
+    echo ${PRINT}
+}
+
+[[ -z "$2" ]] || STOP_MSG=", $2"
+
+function broadcast() {
+    [[ "$last" == "$1" ]] && return || last=$1;
+    COUNT=$(Timecount $1)
+    echo "Server will restart in ${COUNT}${STOP_MSG}"
+    console "tellraw @a [{\"text\":\"[\",\"color\":\"green\"},{\"text\":\"Server restarting in \",\"color\":\"yellow\"},{\"text\":\"$COUNT\",\"color\":\"aqua\"},{\"text\":\"$STOP_MSG\",\"color\":\"red\"},{\"text\":\"]\",\"color\":\"green\"}]"
+    if [[ $1 -le 60 ]] && [[ ${PLAYING} != true ]]; then
+        console "playsound skcraft:localforecast block @a ~ ~ ~ 10000"
+        PLAYING=true
+    fi
+}
+
+s=$([[ -z $1 ]] && echo 300 || echo $1)
+
+function stopping() {
+    broadcast ${s}
+    while :; do
+        if [[ $(($s % 120)) -eq 0 ]]; then
+            broadcast ${s}
+            s=$((s-60))
+            sleep 60
+        elif [[ ${s} -eq 60 ]]; then
+            broadcast ${s}
+            s=$((s-30))
+            sleep 30
+        elif [[ ${s} -eq 30 ]]; then
+            broadcast ${s}
+            s=$((s-20))
+            sleep 20
+        elif [[ ${s} -le 10 ]]; then
+            broadcast ${s}
+            s=$((s-1))
+            sleep 1
+        else
+            s=$((s-1))
+            sleep 1
+        fi
+        if [[ ${s} -le 0 ]]; then
+            break
+        fi
+    done
+
+    console stop
+}
+stopping &
+wait $!

@@ -1,0 +1,14 @@
+#!/bin/sh
+input="$([[ -f "$1" ]] && echo "$1" || echo "$(realpath .)")"
+name="$([[ ! -z "$2" ]] && echo "$2" || echo "$(basename $input)")"
+file="$([[ ! -z "$3" ]] && echo "$3" || echo "$name")"
+clients="/deploy/clients"
+output="$clients/modpacks/$name"
+echo "Name:    $name"
+echo "File:    $file"
+echo "Input:   $input"
+echo "Output:  $output"
+echo "Version: $CI_JOB_ID"
+java -jar "$clients/launcher-builder.jar" --version $CI_JOB_ID --input "$input" --output "$output" --manifest-dest "$output/$file.json" || exit 1
+echo "$CLIENT_UPDATE_URL/packages.php"
+chmod +r "$output" -R
