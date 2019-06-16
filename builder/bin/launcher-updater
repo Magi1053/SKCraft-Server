@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 if [[ -z "$1" ]]; then
 	>&2 echo 'Missing argument 1 (version)';
 	exit 1;

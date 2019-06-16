@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 input="$([[ -f "$1" ]] && echo "$1" || echo "$(realpath .)")"
 clients="/deploy/clients"
 server="/deploy/servers/"${CI_PROJECT_PATH//\//_} | tr '[:upper:]' '[:lower:]'
