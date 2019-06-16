@@ -1,15 +1,17 @@
 #!/bin/bash
 input="$([[ -f "$1" ]] && echo "$1" || echo "$(realpath .)")"
+name=$(echo ${CI_PROJECT_PATH//\//_} | tr '[:upper:]' '[:lower:]')
 clients="/deploy/clients"
-server="/deploy/servers/"${CI_PROJECT_PATH//\//_} | tr '[:upper:]' '[:lower:]'
+server="/deploy/servers/$name"
 
 function cleanup() {
   kill $(jobs -p)
-  docker exec ${CONTAINER} pkill stop >/dev/null
+  docker exec ${name} pkill stop >/dev/null
   exit 1
 }
 
-trap cleanup INT TERM
+trap cleanup INT TERM KILL
+echo ${name}
 
 if [[ ! -z ${CI_PROJECT_PATH} ]]; then
     cd "$clients/modpacks/$CI_PROJECT_PATH"
@@ -19,10 +21,10 @@ if [[ ! -z ${CI_PROJECT_PATH} ]]; then
     echo OLD_HASH=\"${NEW_HASH}\" >> ${CI_PROJECT_PATH_SLUG}.hash
 fi
 
-if docker exec ${CONTAINER} healthcheck &>/dev/null; then
+if docker exec ${name} healthcheck &>/dev/null; then
   echo "Initializing stop countdown and waiting for server to stop."
-  docker exec ${CONTAINER} stop '' "$STOP_MSG" &
-  docker wait ${CONTAINER} >/dev/null &
+  docker exec ${name} stop '' "$STOP_MSG" &
+  docker wait ${name} >/dev/null &
   wait $!
 else
   echo "Server already offline"
@@ -30,11 +32,11 @@ fi
 
 echo "Ensuring container is stopped"
 sleep 1
-docker kill ${CONTAINER} >/dev/null
-docker wait ${CONTAINER} >/dev/null
+docker kill ${name} >/dev/null
+docker wait ${name} >/dev/null
 
 echo "Beginning server update"
-cd ${server}
+cd ${server} || exit 1
 sleep 5
 
 rm -f forge-*-universal.jar
@@ -48,4 +50,4 @@ java -cp "$clients/launcher-builder.jar" com.skcraft.launcher.builder.ServerCopy
 chown 1000:1000 "$server" -R
 
 echo "Starting server!"
-docker start ${CONTAINER} >/dev/null
+docker start ${name} >/dev/null
