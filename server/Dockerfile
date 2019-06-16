@@ -34,5 +34,6 @@ CMD [ "start" ]
 
 ENV RCON_PORT=25575 RCON_PASSWORD=minecraft
 ENV SERVER_NAME=Minecraft LAUNCH_PARAMS='-Xms2G -Xmx8G -Dfml.queryResult=confirm'
+ENV COUNTDOWN=300
 
 USER minecraft

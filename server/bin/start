@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FORGE=(forge-*-universal.jar)
-[[ -z "$FORGE" ]] && echo "$FORGE" || { echo "Could not find Forge launcher"; exit 1; }
+[[ ! -z "$FORGE" ]] || { echo "Could not find Forge launcher"; exit 1; }
 
 [[ $(uname -s) = "Linux" ]] && DELIMITER=":" || DELIMITER=";"
 CLASSPATH=$(find classpath/ -type f 2>/dev/null | paste -s -d ${DELIMITER})

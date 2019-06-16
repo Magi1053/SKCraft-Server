@@ -4,7 +4,7 @@ healthcheck >/dev/null || exit 1
 
 function cleanup() {
     kill $(jobs -p)
-    console "stopsound @a block skcraft:localforecast"
+    console "stopsound @a block skcraft:shutdown"
     console "say [RESTART CANCELLED]"
     exit 1
 }
@@ -38,12 +38,12 @@ function broadcast() {
     echo "Server will restart in ${COUNT}${STOP_MSG}"
     console "tellraw @a [{\"text\":\"[\",\"color\":\"green\"},{\"text\":\"Server restarting in \",\"color\":\"yellow\"},{\"text\":\"$COUNT\",\"color\":\"aqua\"},{\"text\":\"$STOP_MSG\",\"color\":\"red\"},{\"text\":\"]\",\"color\":\"green\"}]"
     if [[ $1 -le 60 ]] && [[ ${PLAYING} != true ]]; then
-        console "playsound skcraft:localforecast block @a ~ ~ ~ 10000"
+        console "playsound skcraft:shutdown block @a ~ ~ ~ 10000"
         PLAYING=true
     fi
 }
 
-s=$([[ -z $1 ]] && echo 300 || echo $1)
+s=$([[ -z $1 ]] && echo ${COUNTDOWN} || echo $1)
 
 function stopping() {
     broadcast ${s}
