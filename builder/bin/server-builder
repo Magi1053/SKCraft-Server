@@ -37,15 +37,27 @@ docker wait ${name} >/dev/null
 
 echo "Beginning server update"
 cd ${server} || exit 1
-sleep 5
 
+echo "Installing forge"
 rm -f forge-*-universal.jar
 java -jar "${input}"/loaders/forge-*-installer.jar --installServer > /dev/null
 rm -f forge-*-installer.jar.log
 
+echo "Removing old mods"
 rm -rf "$server/mods/"
+"Copying new files"
 java -cp "$clients/launcher-builder.jar" com.skcraft.launcher.builder.ServerCopyExport --source "$input/src" --dest "$server"
 
+echo "Running search/replace"
+for variable in $(compgen -e | grep -Ev "LANG|HOSTNAME|JAVA|PWD|HOME|TERM|SHLVL|PATH|GIT|CI_|FF_"); do
+    substitution="${substitution}-e s|\${${variable}}|${!variable}|g "
+done;
+echo "(${substitution::-1})"
+find . -type f -regex ".*\.\(cfg\|conf\)" | while read -r file; do
+    sed -i ${substitution} ${file} 2>/dev/null
+done
+
+echo "Updating permissions"
 #chmod +rw "$server" -R
 chown 1000:1000 "$server" -R
 
