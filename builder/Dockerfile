@@ -6,3 +6,4 @@ RUN apk add --no-cache bash jq
 COPY bin/* /usr/local/bin/
 RUN chmod +x /usr/local/bin/*
 VOLUME ["/var/run/docker.sock"]
+ENV CLIENT_UPDATE_URL=http://update.skcraft.com
