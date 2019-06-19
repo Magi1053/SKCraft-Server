@@ -18,7 +18,7 @@ if [[ ! -z ${CI_PROJECT_PATH} ]]; then
     source ${CI_PROJECT_PATH_SLUG}.hash &>/dev/null
     NEW_HASH=$(cat ${CI_PROJECT_PATH_SLUG}.json | jq -c '.tasks[]' | sha256sum )
     [[ ${OLD_HASH} != ${NEW_HASH} ]] && STOP_MSG="Client Update Required"
-    echo OLD_HASH=\"${NEW_HASH}\" >> ${CI_PROJECT_PATH_SLUG}.hash
+    echo OLD_HASH=\"${NEW_HASH}\" > ${CI_PROJECT_PATH_SLUG}.hash
 fi
 
 if docker exec ${name} healthcheck &>/dev/null; then

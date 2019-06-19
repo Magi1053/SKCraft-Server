@@ -10,5 +10,6 @@ echo "Input:   $input"
 echo "Output:  $output"
 echo "Version: $CI_JOB_ID"
 java -jar "$clients/launcher-builder.jar" --version $CI_JOB_ID --input "$input" --output "$output" --manifest-dest "$output/$file.json" || exit 1
+printf "<?php\n\$gamekey = '$GAMEKEY';\n\$priority = ${PRIORITY:-0};" > "$output/$file.php"
 echo "$CLIENT_UPDATE_URL/packages.php"
 chmod +r "$output" -R
