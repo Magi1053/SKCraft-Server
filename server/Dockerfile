@@ -1,9 +1,7 @@
 FROM openjdk:jdk-alpine
 
-RUN apk add -U bash curl py2-pip \
-	&& rm -rf /var/cache/apk/*
-
-RUN pip install mcstatus
+RUN apk add --no-cache bash curl py2-pip lua htop
+RUN pip install mcstatus speedtest-cli
 
 HEALTHCHECK --start-period=5m CMD healthcheck
 
