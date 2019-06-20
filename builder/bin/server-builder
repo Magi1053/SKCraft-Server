@@ -21,13 +21,13 @@ if [[ ! -z ${CI_PROJECT_PATH} ]]; then
     echo OLD_HASH=\"${NEW_HASH}\" > ${CI_PROJECT_PATH_SLUG}.hash
 fi
 
-if docker exec ${name} healthcheck &>/dev/null; then
+if [[ "starting" != $(docker inspect --format="{{json .State.Health.Status}}" ${name} 2>/dev/null | xargs) ]]; then
   echo "Initializing stop countdown and waiting for server to stop."
   docker exec ${name} stop '' "$STOP_MSG" &
   docker wait ${name} >/dev/null &
   wait $!
 else
-  echo "Server already offline"
+  echo "Server still starting or already offline"
 fi
 
 echo "Ensuring container is stopped"
