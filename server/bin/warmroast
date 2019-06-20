@@ -1,8 +1,8 @@
 #!/bin/bash
 java -Djava.library.path=${JAVA_HOME}/bin \
-    -cp ${JAVA_HOME}/../lib/tools.jar:/usr/local/lib/warmroast.jar \
+    -cp ${JAVA_HOME}/lib/tools.jar:/usr/local/lib/warmroast.jar \
     com.sk89q.warmroast.WarmRoast \
     --thread "Server thread" \
-    --pid $(pgrep -P 1) \
+    --pid $(pgrep -P 1 -f ServerLaunchWrapper) \
     --mappings /usr/local/share/mappings \
     2> >(grep -v :INFO: 1>&2)
