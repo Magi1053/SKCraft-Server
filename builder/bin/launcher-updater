@@ -1,4 +1,5 @@
 #!/bin/bash
+source setup_environment
 if [[ -z "$1" ]]; then
 	>&2 echo 'Missing argument 1 (version)';
 	exit 1;
@@ -8,11 +9,10 @@ if [[ -z "$CLIENT_UPDATE_URL" ]]; then
 	exit 1;
 fi;
 url="$CLIENT_UPDATE_URL/launcher"
-home="/deploy/clients"
-out="$home/launcher"
+out="$clients/launcher"
 mkdir -p "$out" || exit 1
 echo "Version: $1"
 "$JAVA_HOME/bin/pack200" --no-gzip "$out/$1.jar.pack" launcher/build/libs/launcher-*-all.jar || exit 1
-cp launcher-builder/build/libs/launcher-builder-*-all.jar "$home/launcher-builder.jar" || exit 1
+cp launcher-builder/build/libs/launcher-builder-*-all.jar "$clients/launcher-builder.jar" || exit 1
 echo "{\"version\":\"$1\",\"url\":\"$url/$1.jar.pack\"}" > "$out/latest.json"
 echo "$url/latest.json"

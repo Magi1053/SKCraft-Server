@@ -1,8 +1,8 @@
 #!/bin/bash
+source setup_environment
 input="$([[ -f "$1" ]] && echo "$1" || echo "$(realpath .)")"
 name="$([[ ! -z "$2" ]] && echo "$2" || echo "$(basename $input)")"
 file="$([[ ! -z "$3" ]] && echo "$3" || echo "$name")"
-clients="/deploy/clients"
 output="$clients/modpacks/$name"
 echo "Name:    $name"
 echo "File:    $file"

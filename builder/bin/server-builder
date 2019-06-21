@@ -1,17 +1,17 @@
 #!/bin/bash
+source setup_environment
 input="$([[ -f "$1" ]] && echo "$1" || echo "$(realpath .)")"
-name=$(echo ${CI_PROJECT_PATH//\//_} | tr '[:upper:]' '[:lower:]')
-clients="/deploy/clients"
-server="/deploy/servers/$name"
+container=$(echo ${CI_PROJECT_PATH//\//_} | tr '[:upper:]' '[:lower:]')
+server="/deploy/servers/$container"
 
 function cleanup() {
   kill $(jobs -p)
-  docker exec ${name} pkill stop >/dev/null
+  docker exec ${container} pkill stop >/dev/null
   exit 1
 }
 
 trap cleanup INT TERM KILL
-echo ${name}
+echo ${container}
 
 if [[ ! -z ${CI_PROJECT_PATH} ]]; then
     cd "$clients/modpacks/$CI_PROJECT_PATH"
@@ -21,10 +21,10 @@ if [[ ! -z ${CI_PROJECT_PATH} ]]; then
     echo OLD_HASH=\"${NEW_HASH}\" > ${CI_PROJECT_PATH_SLUG}.hash
 fi
 
-if [[ "starting" != $(docker inspect --format="{{json .State.Health.Status}}" ${name} 2>/dev/null | xargs) ]]; then
+if [[ "starting" != $(docker inspect --format="{{json .State.Health.Status}}" ${container} 2>/dev/null | xargs) ]]; then
   echo "Initializing stop countdown and waiting for server to stop."
-  docker exec ${name} stop '' "$STOP_MSG" &
-  docker wait ${name} >/dev/null &
+  docker exec ${container} stop '' "$STOP_MSG" &
+  docker wait ${container} >/dev/null &
   wait $!
 else
   echo "Server still starting or already offline"
@@ -32,8 +32,8 @@ fi
 
 echo "Ensuring container is stopped"
 sleep 1
-docker kill ${name} >/dev/null
-docker wait ${name} >/dev/null
+docker kill ${container} >/dev/null
+docker wait ${container} >/dev/null
 
 echo "Beginning server update"
 cd ${server} || exit 1
@@ -62,4 +62,4 @@ echo "Updating permissions"
 chown 1000:1000 "$server" -R
 
 echo "Starting server!"
-docker start ${name} >/dev/null
+docker start ${container} >/dev/null
