@@ -1,15 +1,14 @@
 #!/bin/bash
 source setup_environment
-input="$([[ -f "$1" ]] && echo "$1" || echo "$(realpath .)")"
-name="$([[ ! -z "$2" ]] && echo "$2" || echo "$(basename $input)")"
-file="$([[ ! -z "$3" ]] && echo "$3" || echo "$name")"
-output="$clients/modpacks/$name"
-echo "Name:    $name"
-echo "File:    $file"
+input="$(realpath .)"
+output="$clients/modpacks/$CI_PROJECT_PATH"
+echo "Name:    $CI_PROJECT_PATH"
+echo "File:    $CI_PROJECT_PATH_SLUG"
 echo "Input:   $input"
 echo "Output:  $output"
 echo "Version: $CI_JOB_ID"
-java -jar "$clients/launcher-builder.jar" --version $CI_JOB_ID --input "$input" --output "$output" --manifest-dest "$output/$file.json" || exit 1
-printf "<?php\n\$gamekey = '$GAMEKEY';\n\$priority = ${PRIORITY:-0};" > "$output/$file.php"
-echo "$CLIENT_UPDATE_URL/packages.php"
+echo "GameKey: $GAMEKEY"
+java -jar "$clients/launcher-builder.jar" --version $CI_JOB_ID --input "$input" --output "$output" --manifest-dest "$output/$CI_PROJECT_PATH_SLUG.json" "$@" || exit 1
+printf "<?php\n\$gamekey = '$GAMEKEY';\n\$priority = ${PRIORITY:-1};" > "$output/$CI_PROJECT_PATH_SLUG.php"
+#echo "$CLIENT_UPDATE_URL/packages.php"
 chmod +r "$output" -R

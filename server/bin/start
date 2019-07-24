@@ -7,8 +7,14 @@ FORGE=(forge-*-universal.jar)
 CLASSPATH=$(find classpath/ -type f 2>/dev/null | paste -s -d ${DELIMITER})
 [[ ! -z ${CLASSPATH} ]] && CLASSPATH=${DELIMITER}${CLASSPATH}
 
+# Compute the nursery size.
+#NURSERY_MINIMUM=$(($MEMORY / 2))
+#NURSERY_MAXIMUM=$(($MEMORY * 4 / 5))
+
 umask -S u=rwx,g=rwx
 exec mc-server-runner java \
-	-cp "${FORGE}${CLASSPATH}" \
-	net.minecraftforge.fml.relauncher.ServerLaunchWrapper \
-	-DserverName="${SERVER_NAME}" -server "$@"
+    -DserverName="${SERVER_NAME}" "$@" -Xms${MEMORY}M -Xmx${MEMORY}M -server \
+    -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC \
+    -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=35 \
+    -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Dusing.aikars.flags=mcflags.emc.gs \
+    -cp "${FORGE}${CLASSPATH}" net.minecraftforge.fml.relauncher.ServerLaunchWrapper \

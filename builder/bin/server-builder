@@ -13,53 +13,58 @@ function cleanup() {
 trap cleanup INT TERM KILL
 echo ${container}
 
-if [[ ! -z ${CI_PROJECT_PATH} ]]; then
-    cd "$clients/modpacks/$CI_PROJECT_PATH"
-    source ${CI_PROJECT_PATH_SLUG}.hash &>/dev/null
-    NEW_HASH=$(cat ${CI_PROJECT_PATH_SLUG}.json | jq -c '.tasks[]' | sha256sum )
-    [[ ${OLD_HASH} != ${NEW_HASH} ]] && STOP_MSG="Client Update Required"
-    echo OLD_HASH=\"${NEW_HASH}\" > ${CI_PROJECT_PATH_SLUG}.hash
-fi
+cd "$clients/modpacks/$CI_PROJECT_PATH"
+source ${CI_PROJECT_PATH_SLUG}.hash &>/dev/null
+OLD_HASH=$(cat ${CI_PROJECT_PATH_SLUG}.hash)
+echo "Old Client Hash: $OLD_HASH"
+NEW_HASH=$(cat ${CI_PROJECT_PATH_SLUG}.json | jq -c '.tasks[]' | sha256sum | awk '{ print $1 }' )
+echo "New Client Hash: $NEW_HASH"
+[[ ${OLD_HASH} != ${NEW_HASH} ]] && STOP_MSG="Client Update Available"
 
-if [[ "starting" != $(docker inspect --format="{{json .State.Health.Status}}" ${container} 2>/dev/null | xargs) ]]; then
+healthcheck=$(docker inspect --format="{{json .State.Health.Status}}" ${container} 2>/dev/null | xargs)
+if [[ ! -z ${healthcheck} && ${healthcheck} != "starting" ]]; then
   echo "Initializing stop countdown and waiting for server to stop."
   docker exec ${container} stop '' "$STOP_MSG" &
   docker wait ${container} >/dev/null &
   wait $!
 else
-  echo "Server still starting or already offline"
+  echo "Server still starting or already stopped"
 fi
 
+echo -n "$NEW_HASH" > ${CI_PROJECT_PATH_SLUG}.hash
+
 echo "Ensuring container is stopped"
-sleep 1
+#sleep 1
 docker kill ${container} >/dev/null
 docker wait ${container} >/dev/null
 
 echo "Beginning server update"
 cd ${server} || exit 1
 
-echo "Installing forge"
+echo -e "\nRemoving old files"
+rm -rfv "$server/classpath/" "$server/mods/" "$server/sponge/plugins/"
+
+echo -e "\nInstalling forge"
 rm -f forge-*-universal.jar
-java -jar "${input}"/loaders/forge-*-installer.jar --installServer > /dev/null
+java -jar "${input}"/loaders/forge-*-installer.jar --installServer #> /dev/null
 rm -f forge-*-installer.jar.log
 
-echo "Removing old mods"
-rm -rf "$server/mods/"
-"Copying new files"
-java -cp "$clients/launcher-builder.jar" com.skcraft.launcher.builder.ServerCopyExport --source "$input/src" --dest "$server"
-
-echo "Running search/replace"
+echo -e "\nGetting substitution"
 for variable in $(compgen -e | grep -Ev "LANG|HOSTNAME|JAVA|PWD|HOME|TERM|SHLVL|PATH|GIT|CI_|FF_"); do
     substitution="${substitution}-e s|\${${variable}}|${!variable}|g "
 done;
 echo "(${substitution::-1})"
-find . -type f -regex ".*\.\(cfg\|conf\)" | while read -r file; do
-    sed -i ${substitution} ${file} 2>/dev/null
-done
+
+echo -e "\nCopying new files"
+while IFS= read -r line; do
+    echo ${line}
+    file=$(echo ${line} | grep -oP 'to\ (.*)(?<!jar)$' | cut -d' ' -f2)
+    [[ ! -z ${file} ]] && sed -i ${substitution} ${file} 2>/dev/null
+done < <(java -cp "$clients/launcher-builder.jar" com.skcraft.launcher.builder.ServerCopyExport --source "$input/src" --dest "$server" 2>&1)
 
 echo "Updating permissions"
 #chmod +rw "$server" -R
 chown 1000:1000 "$server" -R
 
-echo "Starting server!"
+echo -e "\nStarting server!"
 docker start ${container} >/dev/null

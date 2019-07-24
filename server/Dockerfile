@@ -1,9 +1,9 @@
 FROM openjdk:jdk-alpine
 
-RUN apk add --no-cache bash curl py2-pip lua htop
+RUN apk add --no-cache bash curl py2-pip git lua htop
 RUN pip install mcstatus speedtest-cli
 
-HEALTHCHECK --start-period=5m CMD healthcheck
+HEALTHCHECK --start-period=10m CMD healthcheck
 
 RUN addgroup -g 1000 minecraft \
   && adduser -Ss /bin/false -u 1000 -G minecraft -h /home/minecraft minecraft \
@@ -27,12 +27,11 @@ RUN chmod +x /usr/local/bin/*
 
 VOLUME ["/home/minecraft"]
 WORKDIR /home/minecraft
+USER minecraft
 
 ENTRYPOINT [ "start" ]
-CMD ["-Xms2G -Xmx8G -Dfml.queryResult=confirm"]
+#CMD ["-Dfml.queryResult=confirm"]
 
-ENV RCON_PORT=25575 RCON_PASSWORD=minecraft
-ENV SERVER_NAME=Minecraft
-ENV COUNTDOWN=300
-
-USER minecraft
+ENV ENABLE_RCON=true RCON_PORT=25575 RCON_PASSWORD=minecraft
+ENV SERVER_NAME=Minecraft GAMEKEY='' PRIORITY=1
+ENV MEMORY=8192 COUNTDOWN=300
