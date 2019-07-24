@@ -1,4 +1,4 @@
-FROM openjdk:jdk-alpine
+FROM adoptopenjdk/openjdk8:alpine
 
 RUN apk add --no-cache bash curl py2-pip git lua htop
 RUN pip install mcstatus speedtest-cli
