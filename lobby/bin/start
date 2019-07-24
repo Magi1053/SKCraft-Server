@@ -1,0 +1,7 @@
+#!/bin/bash
+while :; do
+    CONTAINERS=$(docker ps --format "{{.Names}}={{.Ports}}")
+    sleep
+done &
+
+exec mc-server-runner java "$JVM_OPTS" -jar paper_server.jar "$@"
