@@ -20,4 +20,6 @@ CLASSPATH=$(find classpath/ -type f 2>/dev/null | paste -s -d ${DELIMITER})
 [[ ! -z ${CLASSPATH} ]] && CLASSPATH=${DELIMITER}${CLASSPATH}
 
 umask -S u=rwx,g=rwx
-exec java -cp "${VELOCITY}${CLASSPATH}" com.velocitypowered.proxy.Velocity "$@"
+exec java "$@" -Xms${MEMORY}M -Xmx${MEMORY}M \
+    -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap \
+    -cp "${VELOCITY}${CLASSPATH}" com.velocitypowered.proxy.Velocity

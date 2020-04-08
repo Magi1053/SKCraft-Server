@@ -17,12 +17,12 @@ cd "$clients/modpacks/$CI_PROJECT_PATH"
 source ${CI_PROJECT_PATH_SLUG}.hash &>/dev/null
 OLD_HASH=$(cat ${CI_PROJECT_PATH_SLUG}.hash)
 echo "Old Client Hash: $OLD_HASH"
-NEW_HASH=$(cat ${CI_PROJECT_PATH_SLUG}.json | jq -c '.tasks[]' | sha256sum | awk '{ print $1 }' )
+NEW_HASH=$(cat ${CI_PROJECT_PATH_SLUG}.json | jq -c '.tasks[]' | grep 'mods/' | sha256sum | awk '{ print $1 }' )
 echo "New Client Hash: $NEW_HASH"
-[[ ${OLD_HASH} != ${NEW_HASH} ]] && STOP_MSG="Client Update Available"
+[[ ${OLD_HASH} != ${NEW_HASH} ]] && STOP_MSG="Client Update Required"
 
 healthcheck=$(docker inspect --format="{{json .State.Health.Status}}" ${container} 2>/dev/null | xargs)
-if [[ ! -z ${healthcheck} && ${healthcheck} != "starting" ]]; then
+if [[ ${healthcheck} != "starting" ]]; then
   echo "Initializing stop countdown and waiting for server to stop."
   docker exec ${container} stop '' "$STOP_MSG" &
   docker wait ${container} >/dev/null &
@@ -34,15 +34,15 @@ fi
 echo -n "$NEW_HASH" > ${CI_PROJECT_PATH_SLUG}.hash
 
 echo "Ensuring container is stopped"
-#sleep 1
 docker kill ${container} >/dev/null
+sleep 1
 docker wait ${container} >/dev/null
 
 echo "Beginning server update"
 cd ${server} || exit 1
 
 echo -e "\nRemoving old files"
-rm -rfv "$server/classpath/" "$server/mods/" "$server/sponge/plugins/"
+rm -rfv "$server/classpath/" "$server/mods/" "$server/coremods/" "$server/sponge/plugins/" "$server/scripts/"
 
 echo -e "\nInstalling forge"
 rm -f forge-*-universal.jar

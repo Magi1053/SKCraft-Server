@@ -1,0 +1,16 @@
+#!/bin/bash
+
+SERVER=(minecraft_server*.jar)
+[[ ! -z "$SERVER" ]] || { echo "Could not find Minecraft launcher"; exit 1; }
+
+[[ $(uname -s) = "Linux" ]] && DELIMITER=":" || DELIMITER=";"
+CLASSPATH=$(find classpath/ -type f 2>/dev/null | paste -s -d ${DELIMITER})
+[[ ! -z ${CLASSPATH} ]] && CLASSPATH=${DELIMITER}${CLASSPATH}
+
+umask -S u=rwx,g=rwx
+exec mc-server-runner java \
+    -DserverName="${SERVER_NAME}" "$@" -Xms${MEMORY}M -Xmx${MEMORY}M -server \
+    -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC \
+    -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=35 \
+    -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Dusing.aikars.flags=mcflags.emc.gs \
+    -cp "${SERVER}${CLASSPATH}" net.minecraft.server.MinecraftServer

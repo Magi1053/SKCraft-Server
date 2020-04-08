@@ -1,7 +1,9 @@
 #!/bin/bash
 container=$(echo ${CI_PROJECT_PATH//\//_} | tr '[:upper:]' '[:lower:]')
 while IFS='=' read -r name value ; do
-    declare ${name}="${value}"
+    if [[ ! -z "${value}" ]]; then
+        declare ${name}="${value}"
+    fi
 done < <(docker exec ${container} env)
 
 clients="/deploy/clients"

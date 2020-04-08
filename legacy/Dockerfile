@@ -1,9 +1,6 @@
 FROM adoptopenjdk/openjdk8:alpine
 
-RUN apk add --no-cache bash curl py2-pip git lua htop
-RUN pip install mcstatus speedtest-cli
-
-HEALTHCHECK --start-period=10m CMD healthcheck
+RUN apk add --no-cache bash curl htop
 
 RUN addgroup -g 1000 minecraft \
   && adduser -Ss /bin/false -u 1000 -G minecraft -h /home/minecraft minecraft \
@@ -27,4 +24,4 @@ ENTRYPOINT [ "start" ]
 
 ENV ENABLE_RCON=true RCON_PORT=25575 RCON_PASSWORD=minecraft
 ENV SERVER_NAME=Minecraft GAMEKEY="" PRIORITY=1
-ENV MEMORY=8192 COUNTDOWN=300
+ENV MEMORY=2048 COUNTDOWN=300
